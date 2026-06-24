@@ -1,13 +1,140 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Banflex Attendance</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+
+body{
+  font-family:Arial,sans-serif;
+  text-align:center;
+  padding:15px;
+}
+
+h1{
+  font-size:32px;
+}
+
+h2{
+  font-size:24px;
+}
+
+button{
+  padding:15px 25px;
+  font-size:20px;
+  margin:10px;
+}
+
+#reader{
+  width:100%;
+  max-width:500px;
+  margin:auto;
+}
+
+#result{
+  margin-top:20px;
+  font-size:24px;
+  font-weight:bold;
+  white-space:pre-line;
+}
+
+</style>
+
 </head>
+
 <body>
 
 <h1>BANFLEX ATTENDANCE</h1>
 
-<h2>Banflex Attendance Test</h2>
+<h2 id="mode">Mode: IN</h2>
+
+<button onclick="toggleMode()">
+Switch IN / OUT
+</button>
+
+<div id="reader"></div>
+
+<div id="result"></div>
+
+<script>
+
+let currentMode = "IN";
+let scanLocked = false;
+
+function toggleMode(){
+
+  currentMode =
+    currentMode === "IN"
+    ? "OUT"
+    : "IN";
+
+  document.getElementById("mode").innerHTML =
+    "Mode: " + currentMode;
+}
+
+function processScan(empId){
+
+  if(scanLocked) return;
+
+  scanLocked = true;
+
+  document.getElementById("result").innerHTML =
+    "Processing...";
+
+  const apiUrl =
+  "https://script.google.com/macros/s/AKfycbwYv4roW8GVAx3RTsDAk4Xs41BLec0CtY2A72PcP_On4TKIU16Q2rIelMkECFCpyLyv/exec?id="
+  + encodeURIComponent(empId)
+  + "&action="
+  + currentMode;
+
+  fetch(apiUrl)
+  .then(response => response.text())
+  .then(data => {
+
+      document.getElementById("result").innerHTML =
+        data;
+
+      setTimeout(function(){
+        scanLocked = false;
+      },2000);
+
+  })
+  .catch(error => {
+
+      document.getElementById("result").innerHTML =
+        error;
+
+      scanLocked = false;
+
+  });
+}
+
+const html5QrCode = new Html5Qrcode("reader");
+
+Html5Qrcode.getCameras()
+.then(devices => {
+
+  if(devices.length){
+
+    html5QrCode.start(
+      devices[0].id,
+      {
+        fps:10,
+        qrbox:250
+      },
+      function(decodedText){
+
+        processScan(decodedText.trim());
+
+      }
+    );
+  }
+});
+
+</script>
 
 </body>
 </html>
