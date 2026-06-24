@@ -12,20 +12,28 @@ body{
   padding:20px;
 }
 
+h1{
+  font-size:42px;
+}
+
+h2{
+  font-size:32px;
+}
+
+button{
+  padding:15px 25px;
+  font-size:22px;
+  margin:10px;
+}
+
 #reader{
   width:350px;
   margin:auto;
 }
 
-button{
-  padding:12px 20px;
-  font-size:18px;
-  margin:10px;
-}
-
 #result{
-  margin-top:20px;
-  font-size:20px;
+  margin-top:25px;
+  font-size:24px;
   font-weight:bold;
   white-space:pre-line;
 }
@@ -38,7 +46,11 @@ button{
 
 <h2 id="mode">Mode: IN</h2>
 
-<button onclick="toggleMode()">Switch IN / OUT</button>
+<button onclick="toggleMode()">
+Switch IN / OUT
+</button>
+
+<br><br>
 
 <div id="reader"></div>
 
@@ -49,20 +61,25 @@ button{
 let currentMode = "IN";
 let scanLocked = false;
 
-function toggleMode(){
-  currentMode = currentMode === "IN" ? "OUT" : "IN";
+function toggleMode() {
+
+  currentMode =
+    currentMode === "IN"
+      ? "OUT"
+      : "IN";
+
   document.getElementById("mode").innerHTML =
     "Mode: " + currentMode;
 }
 
-function processScan(empId){
+function processScan(empId) {
 
-  if(scanLocked) return;
+  if (scanLocked) return;
 
   scanLocked = true;
 
   document.getElementById("result").innerHTML =
-    "Processing...";
+    "Submitting " + empId + "...";
 
   const apiUrl =
     "https://script.google.com/macros/s/AKfycbwYv4roW8GVAx3RTsDAk4Xs41BLec0CtY2A72PcP_On4TKIU16Q2rIelMkECFCpyLyv/exec?id="
@@ -70,52 +87,50 @@ function processScan(empId){
     + "&action="
     + currentMode;
 
-  fetch(apiUrl)
-    .then(r => r.text())
-    .then(data => {
+  const iframe = document.createElement("iframe");
+  iframe.style.display = "none";
+  iframe.src = apiUrl;
+  document.body.appendChild(iframe);
 
-      document.getElementById("result").innerHTML = data;
+  document.getElementById("result").innerHTML =
+    "✓ Attendance Submitted\n\n" +
+    empId + "\n\nMode: " + currentMode;
 
-      setTimeout(function(){
-        scanLocked = false;
-      },2000);
-
-    })
-    .catch(err => {
-
-      document.getElementById("result").innerHTML =
-        "Error: " + err;
-
-      scanLocked = false;
-
-    });
+  setTimeout(function() {
+    scanLocked = false;
+  }, 3000);
 }
 
-function startScanner(){
+function startScanner() {
 
-  const scanner = new Html5Qrcode("reader");
+  const html5QrCode =
+    new Html5Qrcode("reader");
 
-  scanner.start(
-    { facingMode: "environment" },
+  html5QrCode.start(
+    {
+      facingMode: "environment"
+    },
     {
       fps: 10,
       qrbox: 250
     },
-    function(decodedText){
+    function(decodedText) {
 
       processScan(decodedText);
 
     },
-    function(error){
-      // ignore
+    function(errorMessage) {
+
+      // ignore scan errors
+
     }
-  ).catch(function(err){
+  )
+  .catch(function(err) {
 
     document.getElementById("result").innerHTML =
       "Camera Error: " + err;
 
   });
-
 }
 
 window.onload = startScanner;
