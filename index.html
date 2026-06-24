@@ -100,33 +100,34 @@ function processScan(empId){
   document.getElementById("result").innerHTML =
     "Processing...";
 
-  const apiUrl =
-    "https://script.google.com/macros/s/AKfycbwYv4roW8GVAx3RTsDAk4Xs41BLec0CtY2A72PcP_On4TKIU16Q2rIelMkECFCpyLyv/exec?id="
-    + encodeURIComponent(empId)
-    + "&action="
-    + currentMode;
+ const apiUrl =
+"https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnSWRle_4O0gSNrtDT3otBrs2G8yEriIVHc-ySOmeVm0vPNIGeBbE-jehcfurppIYYLZNXEHnZBq-pKswi9z9At5eK39TGJcpSfYTJwHvqfn8VGB0jQ7irCVE2lo9od_VAlZmyLaSCqzEoV8gF-4zz-MUcvMuLhMUPUKdA0q2Rp0h1tN0KnGyjEpGGOWJ9djuZfvfH4IKszf47oQi0jIhmEE5opIOPbzXj4Z6psi_TISzwXUYZalx97yWJG_UlrQBeb4svgXXKnBaLoTudcirLjaLCoAG4ZfFGh9ZY9QzSFKSlQu7yE&lib=MS094tPILeBUi5zCsthUaxN5e-EaTGinT&id="
++ encodeURIComponent(empId)
++ "&action="
++ currentMode;
 
-  fetch(apiUrl)
-  .then(response => response.text())
-  .then(data => {
+ fetch(apiUrl, {
+  method: "GET",
+  mode: "cors"
+})
+.then(response => response.text())
+.then(data => {
 
-      document.getElementById("result").innerHTML = data;
+  document.getElementById("result").innerHTML = data;
 
-      if(data.includes("ATTENDANCE RECORDED")){
-        document.getElementById("result").className = "success";
-      }
-      else if(data.includes("Already")){
-        document.getElementById("result").className = "warning";
-      }
-      else{
-        document.getElementById("result").className = "error";
-      }
+  setTimeout(function(){
+    scanLocked = false;
+  },2000);
 
-      setTimeout(function(){
-        scanLocked = false;
-      },2000);
+})
+.catch(error => {
 
-  })
+  document.getElementById("result").innerHTML =
+    "Error: " + error;
+
+  scanLocked = false;
+
+});
   .catch(error => {
 
       document.getElementById("result").className = "error";
