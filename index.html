@@ -9,9 +9,10 @@
 <style>
 
 body{
-  font-family:Arial,sans-serif;
+  font-family: Arial, sans-serif;
   text-align:center;
   padding:15px;
+  margin:0;
 }
 
 h1{
@@ -26,6 +27,7 @@ button{
   padding:15px 25px;
   font-size:20px;
   margin:10px;
+  cursor:pointer;
 }
 
 #reader{
@@ -39,6 +41,19 @@ button{
   font-size:24px;
   font-weight:bold;
   white-space:pre-line;
+  padding:10px;
+}
+
+.success{
+  color:green;
+}
+
+.warning{
+  color:orange;
+}
+
+.error{
+  color:red;
 }
 
 </style>
@@ -64,7 +79,7 @@ Switch IN / OUT
 let currentMode = "IN";
 let scanLocked = false;
 
-function toggleMode(){
+function toggleMode() {
 
   currentMode =
     currentMode === "IN"
@@ -81,21 +96,31 @@ function processScan(empId){
 
   scanLocked = true;
 
+  document.getElementById("result").className = "";
   document.getElementById("result").innerHTML =
     "Processing...";
 
   const apiUrl =
-  "https://script.google.com/macros/s/AKfycbwYv4roW8GVAx3RTsDAk4Xs41BLec0CtY2A72PcP_On4TKIU16Q2rIelMkECFCpyLyv/exec?id="
-  + encodeURIComponent(empId)
-  + "&action="
-  + currentMode;
+    "https://script.google.com/macros/s/AKfycbwYv4roW8GVAx3RTsDAk4Xs41BLec0CtY2A72PcP_On4TKIU16Q2rIelMkECFCpyLyv/exec?id="
+    + encodeURIComponent(empId)
+    + "&action="
+    + currentMode;
 
   fetch(apiUrl)
   .then(response => response.text())
   .then(data => {
 
-      document.getElementById("result").innerHTML =
-        data;
+      document.getElementById("result").innerHTML = data;
+
+      if(data.includes("ATTENDANCE RECORDED")){
+        document.getElementById("result").className = "success";
+      }
+      else if(data.includes("Already")){
+        document.getElementById("result").className = "warning";
+      }
+      else{
+        document.getElementById("result").className = "error";
+      }
 
       setTimeout(function(){
         scanLocked = false;
@@ -104,8 +129,9 @@ function processScan(empId){
   })
   .catch(error => {
 
+      document.getElementById("result").className = "error";
       document.getElementById("result").innerHTML =
-        error;
+        "Error: " + error;
 
       scanLocked = false;
 
@@ -114,24 +140,26 @@ function processScan(empId){
 
 const html5QrCode = new Html5Qrcode("reader");
 
-Html5Qrcode.getCameras()
-.then(devices => {
+html5QrCode.start(
+  { facingMode: "environment" },
+  {
+    fps: 10,
+    qrbox: 280
+  },
+  function(decodedText){
 
-  if(devices.length){
+    processScan(decodedText.trim());
 
-    html5QrCode.start(
-      devices[0].id,
-      {
-        fps:10,
-        qrbox:250
-      },
-      function(decodedText){
-
-        processScan(decodedText.trim());
-
-      }
-    );
+  },
+  function(errorMessage){
+    // Ignore scan errors
   }
+).catch(function(err){
+
+  document.getElementById("result").className = "error";
+  document.getElementById("result").innerHTML =
+    "Camera Error: " + err;
+
 });
 
 </script>
