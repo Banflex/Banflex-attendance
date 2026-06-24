@@ -1,63 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <style>
-
 body{
-  font-family: Arial, sans-serif;
+  font-family:Arial,sans-serif;
   text-align:center;
-  padding:15px;
-  margin:0;
-}
-
-h1{
-  font-size:32px;
-}
-
-h2{
-  font-size:24px;
-}
-
-button{
-  padding:15px 25px;
-  font-size:20px;
-  margin:10px;
-  cursor:pointer;
+  padding:20px;
 }
 
 #reader{
-  width:100%;
-  max-width:500px;
+  width:350px;
   margin:auto;
+}
+
+button{
+  padding:12px 20px;
+  font-size:18px;
+  margin:10px;
 }
 
 #result{
   margin-top:20px;
-  font-size:24px;
+  font-size:20px;
   font-weight:bold;
   white-space:pre-line;
-  padding:10px;
 }
-
-.success{
-  color:green;
-}
-
-.warning{
-  color:orange;
-}
-
-.error{
-  color:red;
-}
-
 </style>
-
 </head>
 
 <body>
@@ -66,9 +38,7 @@ button{
 
 <h2 id="mode">Mode: IN</h2>
 
-<button onclick="toggleMode()">
-Switch IN / OUT
-</button>
+<button onclick="toggleMode()">Switch IN / OUT</button>
 
 <div id="reader"></div>
 
@@ -79,13 +49,8 @@ Switch IN / OUT
 let currentMode = "IN";
 let scanLocked = false;
 
-function toggleMode() {
-
-  currentMode =
-    currentMode === "IN"
-    ? "OUT"
-    : "IN";
-
+function toggleMode(){
+  currentMode = currentMode === "IN" ? "OUT" : "IN";
   document.getElementById("mode").innerHTML =
     "Mode: " + currentMode;
 }
@@ -96,72 +61,64 @@ function processScan(empId){
 
   scanLocked = true;
 
-  document.getElementById("result").className = "";
   document.getElementById("result").innerHTML =
     "Processing...";
 
- const apiUrl =
-"https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnSWRle_4O0gSNrtDT3otBrs2G8yEriIVHc-ySOmeVm0vPNIGeBbE-jehcfurppIYYLZNXEHnZBq-pKswi9z9At5eK39TGJcpSfYTJwHvqfn8VGB0jQ7irCVE2lo9od_VAlZmyLaSCqzEoV8gF-4zz-MUcvMuLhMUPUKdA0q2Rp0h1tN0KnGyjEpGGOWJ9djuZfvfH4IKszf47oQi0jIhmEE5opIOPbzXj4Z6psi_TISzwXUYZalx97yWJG_UlrQBeb4svgXXKnBaLoTudcirLjaLCoAG4ZfFGh9ZY9QzSFKSlQu7yE&lib=MS094tPILeBUi5zCsthUaxN5e-EaTGinT&id="
-+ encodeURIComponent(empId)
-+ "&action="
-+ currentMode;
+  const apiUrl =
+    "https://script.google.com/macros/s/AKfycbwYv4roW8GVAx3RTsDAk4Xs41BLec0CtY2A72PcP_On4TKIU16Q2rIelMkECFCpyLyv/exec?id="
+    + encodeURIComponent(empId)
+    + "&action="
+    + currentMode;
 
- fetch(apiUrl, {
-  method: "GET",
-  mode: "cors"
-})
-.then(response => response.text())
-.then(data => {
+  fetch(apiUrl)
+    .then(r => r.text())
+    .then(data => {
 
-  document.getElementById("result").innerHTML = data;
+      document.getElementById("result").innerHTML = data;
 
-  setTimeout(function(){
-    scanLocked = false;
-  },2000);
+      setTimeout(function(){
+        scanLocked = false;
+      },2000);
 
-})
-.catch(error => {
+    })
+    .catch(err => {
 
-  document.getElementById("result").innerHTML =
-    "Error: " + error;
-
-  scanLocked = false;
-
-});
-  .catch(error => {
-
-      document.getElementById("result").className = "error";
       document.getElementById("result").innerHTML =
-        "Error: " + error;
+        "Error: " + err;
 
       scanLocked = false;
 
-  });
+    });
 }
 
-const html5QrCode = new Html5Qrcode("reader");
+function startScanner(){
 
-html5QrCode.start(
-  { facingMode: "environment" },
-  {
-    fps: 10,
-    qrbox: 280
-  },
-  function(decodedText){
+  const scanner = new Html5Qrcode("reader");
 
-    processScan(decodedText.trim());
+  scanner.start(
+    { facingMode: "environment" },
+    {
+      fps: 10,
+      qrbox: 250
+    },
+    function(decodedText){
 
-  },
-  function(errorMessage){
-    // Ignore scan errors
-  }
-).catch(function(err){
+      processScan(decodedText);
 
-  document.getElementById("result").className = "error";
-  document.getElementById("result").innerHTML =
-    "Camera Error: " + err;
+    },
+    function(error){
+      // ignore
+    }
+  ).catch(function(err){
 
-});
+    document.getElementById("result").innerHTML =
+      "Camera Error: " + err;
+
+  });
+
+}
+
+window.onload = startScanner;
 
 </script>
 
